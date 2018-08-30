@@ -2,7 +2,8 @@ package com.github.rockjam.mapreduce.ast
 
 sealed trait Expression
 
-case class Arithmetic(left: Expression, op: Operator, right: Expression) extends Expression
+case class Arithmetic(left: Expression, op: Operator, right: Expression)
+    extends Expression
 
 sealed trait Value extends Expression with Product with Serializable
 

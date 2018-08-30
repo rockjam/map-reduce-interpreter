@@ -20,20 +20,37 @@ object Parsers {
     **/
   def parse(program: String) = {}
 
+  val program: P[Seq[Statement]] = P((statement ~ newLine).rep)
+
   val ws = P(" ".rep(1))
   val wsMaybe = P(" ".rep)
+  val newLine = P("\n")
 
-  val expression:P[Expression] = P(arithmeticExpression | identifier | numLiteral | sequence | map) // TODO: add reduce
+  val expression: P[Expression] = P(
+    arithmeticExpression | identifier | numLiteral | sequence | map) // TODO: add reduce
 
-  val identifier: P[Identifier] = P(AlfaNumeric.alfa ~ AlfaNumeric.alfaNum.rep).!.map(Identifier)
-  val numLiteral: P[NumericLiteral] = P(AlfaNumeric.num.rep(min = 1)).!.map(s => NumericLiteral(s.toLong))
+  val statement: P[Statement] = P(assignment | out | print)
 
-  val assignment = P("val" ~/ ws ~ identifier ~ wsMaybe ~ "=" ~ wsMaybe ~ expression ~ wsMaybe ~ End)
+  val identifier: P[Identifier] =
+    P(AlfaNumeric.alfa ~ AlfaNumeric.alfaNum.rep).!.map(Identifier)
+  val numLiteral: P[NumericLiteral] =
+    P(AlfaNumeric.num.rep(min = 1)).!.map(s => NumericLiteral(s.toLong))
 
-  val out = P("out" ~ ws ~ expression ~ wsMaybe ~ End)
+  val assignment =
+    P("val" ~/ ws ~ identifier ~ wsMaybe ~ "=" ~ wsMaybe ~ expression ~ wsMaybe)
+      .map {
+        case (identifier, expression) => Assignment(identifier, expression)
+      }
 
-  val print = P(
-    "print" ~ ws ~ "\"" ~ CharsWhile(_ != '"').rep(1).! ~ "\"" ~ wsMaybe ~ End)
+  val out = P("out" ~ ws ~ expression ~ wsMaybe).map { expr =>
+    Out(expr)
+  }
+
+  val print =
+    P("print" ~ ws ~ "\"" ~ CharsWhile(_ != '"').rep(1).! ~ "\"" ~ wsMaybe)
+      .map { string =>
+        Print(string)
+      }
 
   val operator =
     P("+").map(_ => Operator.Add) |
@@ -60,8 +77,7 @@ object Parsers {
 
   val map: P[Map] = P(
     "map" ~ "(" ~ wsMaybe ~ sequence ~ wsMaybe ~ "," ~ wsMaybe ~ lambda ~ wsMaybe ~ ")"
-  )
-    .map { case (seq, lambda) => Map(seq, lambda) }
+  ).map { case (seq, lambda) => Map(seq, lambda) }
 
   val reduce: P[Reduce] = AnyChar.rep.!.map { _ =>
     Reduce(

@@ -13,13 +13,13 @@ object ParsersTests extends TestSuite {
         val Parsed.Success(string, _) =
           Parsers.print.parse("""print "hello world"""")
 
-        assert(string == "hello world")
+        assert(string == Print("hello world"))
       }
       "parse input with whitespace on the end" - {
         val Parsed.Success(string, _) =
           Parsers.print.parse("""print "hello world" """)
 
-        assert(string == "hello world")
+        assert(string == Print("hello world"))
       }
       "fail when something comes after string literal" - {
         assert(
@@ -45,22 +45,27 @@ object ParsersTests extends TestSuite {
 
     "arithmetic expression parser" - {
       "parse valid input" - {
-        val Parsed.Success(output, _) = Parsers.arithmeticExpression.parse("i + 4")
+        val Parsed.Success(output, _) =
+          Parsers.arithmeticExpression.parse("i + 4")
 
         assert(
           output == Arithmetic(Identifier("i"), Operator.Add, NumericLiteral(4))
         )
       }
       "parse simple expression" - {
-        val Parsed.Success(output, _) = Parsers.arithmeticExpression.parse("6 * 8")
+        val Parsed.Success(output, _) =
+          Parsers.arithmeticExpression.parse("6 * 8")
 
         assert(
-          output == Arithmetic(NumericLiteral(6), Operator.Mul, NumericLiteral(8))
+          output == Arithmetic(NumericLiteral(6),
+                               Operator.Mul,
+                               NumericLiteral(8))
         )
       }
       // FIXME
       "parse expression with 3 parts" - {
-        val Parsed.Success(output, _) = Parsers.arithmeticExpression.parse("6 * 8 + i")
+        val Parsed.Success(output, _) =
+          Parsers.arithmeticExpression.parse("6 * 8 + i")
 
         assert(
           output == Arithmetic(
@@ -74,12 +79,11 @@ object ParsersTests extends TestSuite {
 
     "statements parser" - {
       "parse valid input" - {
-        val Parsed.Success((identifier, expression), _) =
+        val Parsed.Success(assignment, _) =
           Parsers.assignment.parse("val x = 22")
 
         assert(
-          identifier == Identifier("x"),
-          expression == NumericLiteral(22)
+          assignment == Assignment(Identifier("x"), NumericLiteral(22))
         )
       }
       "parse input with different spaces" - {
@@ -91,21 +95,23 @@ object ParsersTests extends TestSuite {
         )
 
         inputs.foreach { input =>
-          val Parsed.Success((identifier, expression), _) =
+          val Parsed.Success(assignment, _) =
             Parsers.assignment.parse(input)
 
           assert(
-            identifier == Identifier("x"),
-            expression == NumericLiteral(22)
+            assignment == Assignment(Identifier("x"), NumericLiteral(22))
           )
         }
       }
       "parse arithmetic expression" - {
-        val Parsed.Success((identifier, expression), _) = Parsers.assignment.parse("val x = i + 5")
+        val Parsed.Success(assignment, _) =
+          Parsers.assignment.parse("val x = i + 5")
 
         assert(
-          identifier == Identifier("x"),
-          expression == Arithmetic(Identifier("i"), Operator.Add, NumericLiteral(5))
+          assignment == Assignment(Identifier("x"),
+                                   Arithmetic(Identifier("i"),
+                                              Operator.Add,
+                                              NumericLiteral(5)))
         )
       }
       "fail on input without assignment" - {
@@ -209,6 +215,24 @@ object ParsersTests extends TestSuite {
         )
       }
 
+    }
+
+    "reduce parser" - {
+      assert(false)
+    }
+
+    "program parser" - {
+      "parse multi-line input" - {
+        val program =
+          """val x = 5
+            |val y = x + 3
+            |print "hello world"
+            |out x + y
+          """.stripMargin
+
+        val Parsed.Success(expressions, _) = Parsers.program.parse(program)
+        assert(false)
+      }
     }
   }
 
