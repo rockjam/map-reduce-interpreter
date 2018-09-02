@@ -7,6 +7,8 @@ object root extends ScalaModule {
     ivy"com.lihaoyi::fastparse:1.0.0"
   )
 
+  def mainClass = Some("com.github.rockjam.mapreduce.Main")
+
   object test extends Tests {
     def testFrameworks = Seq("utest.runner.Framework")
     def ivyDeps = Agg(ivy"com.lihaoyi::utest:0.6.3")

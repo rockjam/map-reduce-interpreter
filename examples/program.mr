@@ -1,0 +1,13 @@
+val end = 30
+val seq = {1, end}
+print "seq is: "
+out seq
+val mapped = map(seq, i -> i+1)
+print "mapped is: "
+out mapped
+val reduced = reduce(seq, 0, x y -> x + y)
+print "reduced is: "
+out reduced
+val reduced2 = reduce(mapped, 0, x y -> x + y)
+print "reduced2 is: "
+out reduced2
