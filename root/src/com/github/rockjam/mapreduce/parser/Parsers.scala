@@ -18,7 +18,7 @@ object Parsers {
     * print "pi = "
     * out pi
     **/
-  def parse(program: String) = {}
+  def parse(program: String): Either[Throwable, Seq[Statement]] = ???
 
   val program: P[Seq[Statement]] = P((statement ~ newLine).rep)
 
@@ -26,8 +26,7 @@ object Parsers {
   val wsMaybe = P(" ".rep)
   val newLine = P("\n")
 
-  val expression: P[Expression] = P(
-    arithmeticExpression | identifier | numLiteral | sequence | map) // TODO: add reduce
+  val expression: P[Expression] = P(map | arithmeticExpression | identifier | numLiteral | sequence) // TODO: add reduce
 
   val statement: P[Statement] = P(assignment | out | print)
 
@@ -76,7 +75,7 @@ object Parsers {
   }
 
   val map: P[Map] = P(
-    "map" ~ "(" ~ wsMaybe ~ sequence ~ wsMaybe ~ "," ~ wsMaybe ~ lambda ~ wsMaybe ~ ")"
+    "map" ~ "(" ~ wsMaybe ~ (sequence | identifier) ~ wsMaybe ~ "," ~ wsMaybe ~ lambda ~ wsMaybe ~ ")"
   ).map { case (seq, lambda) => Map(seq, lambda) }
 
   val reduce: P[Reduce] = AnyChar.rep.!.map { _ =>

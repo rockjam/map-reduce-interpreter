@@ -1,24 +1,35 @@
 package com.github.rockjam.mapreduce
 
-import com.github.rockjam.mapreduce.ast.NumSeq
+import java.nio.file.{Files, Paths}
+
+import com.github.rockjam.mapreduce.interpreter.Interpreter
 import com.github.rockjam.mapreduce.parser.Parsers
 
 object Main {
 
   def main(args: Array[String]): Unit = {
-    val input = args(0)
+    val file = args(0)
 
-    val result = Parsers.sequence
-      .parse(input)
+    val content = new String(Files.readAllBytes(Paths.get(file)))
+
+    println("=== the program is ===")
+    println(content)
+    println("======================")
+
+    Parsers.program
+      .parse(content)
       .fold(
-        onFailure = (a, b, c) => s"Failed to parse ${input}",
+        onFailure = (a, b, c) =>
+          println(s"Failed to parse ${file}"),
         onSuccess = {
-          case (NumSeq(start, end), _) =>
-            s"Parsed: start: ${start}, end: ${end}"
+          case (statements, _) =>
+            println("=== statements are ===")
+            println(statements.mkString("\n"))
+            println("======================")
+
+            Interpreter(statements)
         }
       )
-
-    println(result)
   }
 
 }

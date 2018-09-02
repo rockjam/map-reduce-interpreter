@@ -1,20 +1,32 @@
 package com.github.rockjam.mapreduce.ast
 
-sealed trait Expression
+// expressions are evaluated to values. values could be numeric values or numeric sequences
+sealed trait Expression extends Product with Serializable
 
 case class Arithmetic(left: Expression, op: Operator, right: Expression)
     extends Expression
 
-sealed trait Value extends Expression with Product with Serializable
+// identifier evaluates to it's value
+case class Identifier(name: String) extends Expression
 
-case class Identifier(name: String) extends Value
+// numeric literal evaluates to itself
+case class NumericLiteral(value: Long) extends Expression
 
-case class NumericLiteral(value: Long) extends Value
+// num seq evaluates to itself.
+// there could be numeric ranges, when we know only start value and end value
+// there could be numeric sequences, when we know each element of sequence
+case class NumSeq(start: Expression, end: Expression) extends Expression
 
-case class NumSeq(start: Value, end: Value) extends Expression
+case class SeqNumbers(numbers: Seq[Expression]) extends Expression {
+  override def toString: String = numbers.map(_.asInstanceOf[NumericLiteral].value).toString()
+}
 
+// lambda evaluates to numeric value
 case class Lambda(param: Identifier, body: Expression) extends Expression
 
-case class Map(seq: NumSeq, lambda: Lambda) extends Expression
+// map evaluates to numeric sequence
+// seq is either NumSeq or Identifier
+case class Map(seq: Expression, lambda: Lambda) extends Expression
 
-case class Reduce(seq: NumSeq, zero: Value, lambda: Lambda) extends Expression
+// reduce evaluates to numeric value
+case class Reduce(seq: NumSeq, zero: Expression, lambda: Lambda) extends Expression
