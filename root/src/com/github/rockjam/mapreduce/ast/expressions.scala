@@ -22,11 +22,11 @@ case class SeqNumbers(numbers: Seq[Expression]) extends Expression {
 }
 
 // lambda evaluates to numeric value
-case class Lambda(param: Identifier, body: Expression) extends Expression
+case class Lambda(param: Seq[Identifier], body: Expression) extends Expression
 
 // map evaluates to numeric sequence
 // seq is either NumSeq or Identifier
 case class Map(seq: Expression, lambda: Lambda) extends Expression
 
 // reduce evaluates to numeric value
-case class Reduce(seq: NumSeq, zero: Expression, lambda: Lambda) extends Expression
+case class Reduce(seq: Expression, zero: Expression, lambda: Lambda) extends Expression

@@ -40,21 +40,29 @@ object Interpreter {
     case Lambda(_, body) =>
       evalExpression(body)(env)
     case Map(seq, lambda) =>
-      val evaluatedSeq = evalExpression(seq)(env).asInstanceOf[NumSeq]
-
-      val start = evalExpression(evaluatedSeq.start)(env).asInstanceOf[NumericLiteral]
-      val end = evalExpression(evaluatedSeq.end)(env).asInstanceOf[NumericLiteral]
+      val seqElements: Seq[Expression] = getSeqElements(evalExpression(seq)(env))
 
       SeqNumbers(
-        (start.value to end.value).map { i =>
-          evalExpression(lambda)(immutable.Map(lambda.param -> NumericLiteral(i)))
-        }
+        seqElements.map { el => evalExpression(lambda)(env = immutable.Map(lambda.param.head -> el)) }
       )
     case Reduce(seq, zero, lambda) =>
-      sys.error("Failed")
+      val seqElements: Seq[Expression] = getSeqElements(evalExpression(seq)(env))
+
+      val zeroElement = evalExpression(zero)(env).asInstanceOf[NumericLiteral]
+
+      seqElements.foldLeft[Expression](zeroElement) { (acc, el) =>
+        val Seq(param1, param2) = lambda.param
+        evalExpression(lambda)(env = immutable.Map(param1 -> acc, param2 -> el))
+      }
     case NumSeq(start, end) =>
       NumSeq(evalExpression(start)(env), evalExpression(end)(env))
     case num: NumericLiteral => num
+  }
+
+  private def getSeqElements(expr: Expression): Seq[Expression] = expr match {
+    case NumSeq(start, end) =>
+      (start.asInstanceOf[NumericLiteral].value to end.asInstanceOf[NumericLiteral].value).map(NumericLiteral)
+    case SeqNumbers(numbers) => numbers
   }
 
 }

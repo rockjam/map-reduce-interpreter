@@ -199,29 +199,47 @@ object ParsersTests extends TestSuite {
     }
 
     "lambda parser" - {
-      "parse valid input" - {
-        val Parsed.Success(lambda, _) = Parsers.lambda.parse("i -> i")
+      "lambda1" - {
+        "parse valid input" - {
+          val Parsed.Success(lambda, _) = Parsers.lambda1.parse("i -> i")
 
-        assert(
-          lambda == Lambda(
-            Identifier("i"),
-            Identifier("i")
-          )
-        )
-      }
-      "parse simple expression" - {
-        val Parsed.Success(lambda, _) = Parsers.lambda.parse("i -> i * 2")
-
-        assert(
-          lambda == Lambda(
-            Identifier("i"),
-            Arithmetic(
-              Identifier("i"),
-              Operator.Mul,
-              NumericLiteral(2)
+          assert(
+            lambda == Lambda(
+              Seq(Identifier("i")),
+              Identifier("i")
             )
           )
-        )
+        }
+        "parse simple expression" - {
+          val Parsed.Success(lambda, _) = Parsers.lambda1.parse("i -> i * 2")
+
+          assert(
+            lambda == Lambda(
+              Seq(Identifier("i")),
+              Arithmetic(
+                Identifier("i"),
+                Operator.Mul,
+                NumericLiteral(2)
+              )
+            )
+          )
+        }
+      }
+      "lambda2" - {
+        "parse valid input" - {
+          val Parsed.Success(lambda, _) = Parsers.lambda1.parse("x y -> x + y")
+
+          assert(
+            lambda == Lambda(
+              Seq(Identifier("x"), Identifier("y")),
+              Arithmetic(
+                Identifier("x"),
+                Operator.Add,
+                Identifier("y")
+              )
+            )
+          )
+        }
       }
     }
 
@@ -233,7 +251,7 @@ object ParsersTests extends TestSuite {
           map == Map(
             seq = NumSeq(NumericLiteral(1), NumericLiteral(3)),
             lambda = Lambda(
-              Identifier("i"),
+              Seq(Identifier("i")),
               Arithmetic(
                 Identifier("i"),
                 Operator.Mul,
@@ -250,7 +268,7 @@ object ParsersTests extends TestSuite {
           map == Map(
             seq = Identifier("seq"),
             lambda = Lambda(
-              Identifier("i"),
+              Seq(Identifier("i")),
               Arithmetic(
                 Identifier("i"),
                 Operator.Mul,
@@ -264,7 +282,24 @@ object ParsersTests extends TestSuite {
     }
 
     "reduce parser" - {
-      // TODO
+      "parse valid input" - {
+        val Parsed.Success(reduce, _) = Parsers.reduce.parse("reduce({0,10}, 0, x y -> x + y)")
+
+        assert(
+          reduce == Reduce(
+            NumSeq(NumericLiteral(0), NumericLiteral(10)),
+            NumericLiteral(0),
+            Lambda(
+              Seq(Identifier("x"), Identifier("y")),
+              Arithmetic(
+                Identifier("x"),
+                Operator.Add,
+                Identifier("y")
+              )
+            ))
+        )
+
+      }
     }
 
     "program parser" - {
@@ -284,7 +319,7 @@ object ParsersTests extends TestSuite {
             Map(
               NumSeq(NumericLiteral(1),NumericLiteral(3)),
               Lambda(
-                Identifier("i"),
+                Seq(Identifier("i")),
                 Arithmetic(
                   Identifier("i"),
                   Operator.Mul,

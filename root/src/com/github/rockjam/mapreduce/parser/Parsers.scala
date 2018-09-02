@@ -26,7 +26,7 @@ object Parsers {
   val wsMaybe = P(" ".rep)
   val newLine = P("\n")
 
-  val expression: P[Expression] = P(map | arithmeticExpression | identifier | numLiteral | sequence) // TODO: add reduce
+  val expression: P[Expression] = P(map | reduce | arithmeticExpression | identifier | numLiteral | sequence)
 
   val statement: P[Statement] = P(assignment | out | print)
 
@@ -65,8 +65,14 @@ object Parsers {
       .map { case (left, op, right) => Arithmetic(left, op, right) }
   }
 
-  val lambda: P[Lambda] = P(identifier ~ wsMaybe ~ "->" ~ wsMaybe ~ expression)
-    .map { case (param, body) => Lambda(param, body) }
+  // TODO: I guess we shouldn't restrict number of parameters in parsing stage,
+  // cause when it's wrong number of arguments - syntax is correct, semantics are not.
+  def lambda(params: Int): P[Lambda] = P((identifier ~ wsMaybe).rep(min = params) ~ wsMaybe ~ "->" ~ wsMaybe ~ expression)
+    .map { case (params, body) => Lambda(params, body) }
+
+  val lambda1:P[Lambda] = lambda(1)
+
+  val lambda2:P[Lambda] = lambda(2)
 
   val sequence: P[NumSeq] = {
     val seqElement = P(numLiteral | identifier)
@@ -75,16 +81,12 @@ object Parsers {
   }
 
   val map: P[Map] = P(
-    "map" ~ "(" ~ wsMaybe ~ (sequence | identifier) ~ wsMaybe ~ "," ~ wsMaybe ~ lambda ~ wsMaybe ~ ")"
+    "map" ~ "(" ~ wsMaybe ~ (sequence | identifier) ~ wsMaybe ~ "," ~ wsMaybe ~ lambda1 ~ wsMaybe ~ ")"
   ).map { case (seq, lambda) => Map(seq, lambda) }
 
-  val reduce: P[Reduce] = AnyChar.rep.!.map { _ =>
-    Reduce(
-      NumSeq(NumericLiteral(0), NumericLiteral(10)),
-      NumericLiteral(0),
-      Lambda(Identifier("i"), NumericLiteral(20))
-    )
-  }
+  val reduce: P[Reduce] = P(
+    "reduce" ~ "(" ~ wsMaybe ~ (sequence | identifier) ~ wsMaybe ~ "," ~ wsMaybe ~ (numLiteral | identifier) ~ wsMaybe ~ "," ~ wsMaybe ~ lambda2 ~ wsMaybe ~ ")"
+  ).map { case (seq, zero, lambda) => Reduce(seq, zero, lambda)}
 
 }
 
